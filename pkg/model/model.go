@@ -29,3 +29,11 @@ type Service struct {
 type ServiceResult struct {
 	Services []Service `json:"services"`
 }
+
+//SearchResult result
+type SearchResult struct {
+	Name         string `json:"name"`
+	ChartVersion string `json:"chartVersion"`
+	AppVersion   string `json:"appVersion"`
+	Description  string `json:"description"`
+}
