@@ -1,15 +1,23 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+.helm
+.helm/*
+/build
+/build/*
+/config
+/config/*
+.idea
+.idea/*
+cmd/tenkai/config
+cmd/tenkai/__debug*
 
-# Test binary, built with `go test -c`
-*.test
+vendor
+# Ignore dependency httpgetter
+#vendor/k8s.io/helm/pkg/getter/httpgetter.go
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+coverage.html
 
-# Dependency directories (remove the comment below to include it)
-vendor/
+# Ignore vscode workspace file
+*.code-workspace
+
+app.yaml
