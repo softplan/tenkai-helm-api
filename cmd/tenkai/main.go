@@ -8,6 +8,7 @@ import (
 	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/softplan/tenkai-helm-api/pkg/handlers"
 	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
+	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 )
 
 const (
@@ -31,8 +32,18 @@ func main() {
 	defer rabbitMQ.Conn.Close()
 	defer rabbitMQ.Channel.Close()
 
+	appContext.K8sConfigPath = global.KubeConfigBasePath
+	appContext.HelmServiceAPI = helmapi.HelmServiceBuilder()
+	initializeHelm(appContext)
+
 	handlers.StartConsumer(appContext)
 
+}
+
+func initializeHelm(appContext *handlers.AppContext) {
+	if _, err := os.Stat(global.HelmDir + "/repository/repositories.yaml"); os.IsNotExist(err) {
+		appContext.HelmServiceAPI.InitializeHelm()
+	}
 }
 
 func initRabbit(uri string) rabbitmq.RabbitImpl {
