@@ -21,6 +21,7 @@ type RabbitImpl struct {
 //Queues
 const (
 	InstallQueue = "InstallQueue"
+	ResultInstallQueue = "ResultInstallQueue"
 )
 
 //GetConnection to the RabbitMQ Server
@@ -31,7 +32,6 @@ func (rabbit RabbitImpl) GetConnection(uri string) *amqp.Connection {
 	}
 	return conn
 }
-
 
 //GetChannel with rabbitMQ Server
 func (rabbit RabbitImpl) GetChannel() *amqp.Channel {
