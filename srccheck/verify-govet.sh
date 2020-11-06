@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -x
+
+go vet ./cmd/...
+go vet ./pkg/...
