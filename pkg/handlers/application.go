@@ -3,10 +3,10 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/softplan/tenkai-helm-api/pkg/configs"
+	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 	"github.com/softplan/tenkai-helm-api/pkg/service/core"
@@ -38,7 +38,9 @@ func StartConsumer(appContext *AppContext) {
 		nil,
 	)
 	if err != nil {
-		fmt.Println(err)
+		global.Logger.Error(
+			global.AppFields{global.Function: "StartConsumer", "error": err.Error()},
+			 "error when call GetCosumer")
 		panic(err)
 	}
 
@@ -61,13 +63,13 @@ func StartConsumer(appContext *AppContext) {
 			)
 
 			str, err := appContext.doUpgrade(payload.UpgradeRequest, out)
-			fmt.Println(str, err)
 			err = appContext.sendResponse(str, err, payload.DeploymentID)
-			fmt.Println(err)
 		}
 	}()
 
-	fmt.Println(" [*] - waiting for messages")
+	global.Logger.Info(
+		global.AppFields{global.Function: "StartConsumer"},
+		 "[*] Waiting for new messages")
 	<-forever
 }
 

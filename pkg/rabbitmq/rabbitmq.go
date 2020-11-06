@@ -28,6 +28,7 @@ const (
 func (rabbit RabbitImpl) GetConnection(uri string) *amqp.Connection {
 	conn, err := amqp.Dial(uri)
 	if err != nil {
+		//log
 		panic("Fail to connect RabbitMQ Server")
 	}
 	return conn
@@ -37,6 +38,7 @@ func (rabbit RabbitImpl) GetConnection(uri string) *amqp.Connection {
 func (rabbit RabbitImpl) GetChannel() *amqp.Channel {
 	ch, err := rabbit.Conn.Channel()
 	if err != nil {
+		//log
 		panic("Fail to open a channel with RabbitMQ Server")
 	}
 	return ch

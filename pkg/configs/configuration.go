@@ -14,21 +14,12 @@ type Configuration struct {
 
 //App struct
 type App struct {
-	Passkey string
-	Elastic Elastic
 	Rabbit  Rabbit
 }
 
 //Rabbit struct
 type Rabbit struct {
 	URI string
-}
-
-//Elastic Config Structure
-type Elastic struct {
-	URL      string
-	Username string
-	Password string
 }
 
 //ReadConfig inicia as configurações
