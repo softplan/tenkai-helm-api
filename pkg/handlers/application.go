@@ -40,7 +40,7 @@ func StartConsumer(appContext *AppContext) {
 	if err != nil {
 		global.Logger.Error(
 			global.AppFields{global.Function: "StartConsumer", "error": err.Error()},
-			 "error when call GetCosumer")
+			"error when call GetCosumer")
 		panic(err)
 	}
 
@@ -69,11 +69,11 @@ func StartConsumer(appContext *AppContext) {
 
 	global.Logger.Info(
 		global.AppFields{global.Function: "StartConsumer"},
-		 "[*] Waiting for new messages")
+		"[*] Waiting for new messages")
 	<-forever
 }
 
-func (appContext *AppContext) sendResponse(str string, err error, deploymentID uint) (error) {
+func (appContext *AppContext) sendResponse(str string, err error, deploymentID uint) error {
 	var success bool
 	var errorMessage string
 	if err != nil {
@@ -85,8 +85,8 @@ func (appContext *AppContext) sendResponse(str string, err error, deploymentID u
 	}
 
 	payload := rabbitmq.RabbitPayloadProducer{
-		Success: success,
-		Error: errorMessage,
+		Success:      success,
+		Error:        errorMessage,
 		DeploymentID: deploymentID,
 	}
 
@@ -99,7 +99,7 @@ func (appContext *AppContext) sendResponse(str string, err error, deploymentID u
 		false,
 		amqp.Publishing{
 			ContentType: "application/json",
-			Body: payloadJSON,
+			Body:        payloadJSON,
 		},
 	)
 }

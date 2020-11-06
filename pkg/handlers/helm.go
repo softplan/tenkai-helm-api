@@ -7,7 +7,6 @@ import (
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 )
 
-
 func (appContext *AppContext) doUpgrade(upgradeRequest helmapi.UpgradeRequest, out *bytes.Buffer) (string, error) {
 	var err error
 	upgradeRequest.Chart, err = appContext.getChartName(upgradeRequest.Chart)

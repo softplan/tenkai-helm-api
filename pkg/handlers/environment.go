@@ -7,12 +7,11 @@ import (
 	"strings"
 )
 
-
 func createEnvironmentFile(clusterName string, clusterUserToken string,
 	fileName string, ca string, server string, namespace string) {
 
 	removeEnvironmentFile(fileName)
-	
+
 	file, err := os.Create(fileName)
 	if err != nil {
 		panic(err)

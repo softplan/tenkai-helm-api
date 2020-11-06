@@ -9,12 +9,12 @@ import (
 
 //Configuration - Configuração geral da aplicação
 type Configuration struct {
-	App    App
+	App App
 }
 
 //App struct
 type App struct {
-	Rabbit  Rabbit
+	Rabbit Rabbit
 }
 
 //Rabbit struct

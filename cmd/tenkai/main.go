@@ -65,7 +65,7 @@ func createInstallQueue(rabbitMQ rabbitmq.RabbitImpl) {
 	if err != nil {
 		global.Logger.Error(
 			global.AppFields{global.Function: "createInstallQueue"},
-			"Could not declare InstallQueue - " + err.Error())
+			"Could not declare InstallQueue - "+err.Error())
 	}
 }
 
@@ -74,7 +74,7 @@ func createResultInstallQueue(rabbitMQ rabbitmq.RabbitImpl) {
 	if err != nil {
 		global.Logger.Error(
 			global.AppFields{global.Function: "createResultInstallQueue"},
-			"Could not declare ResultInstallQueue - " + err.Error())
+			"Could not declare ResultInstallQueue - "+err.Error())
 	}
 }
 
