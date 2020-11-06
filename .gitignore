@@ -9,7 +9,7 @@
 cmd/tenkai/config
 cmd/tenkai/__debug*
 
-vendor
+
 # Ignore dependency httpgetter
 #vendor/k8s.io/helm/pkg/getter/httpgetter.go
 
