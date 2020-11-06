@@ -1,0 +1,33 @@
+language: go
+
+addons:
+  sonarcloud:
+    organization: "softplan"
+
+go:
+  - "1.12"
+
+branches:
+  only:
+  - dev
+  - main
+  - /^\d{2}\.\d\.\d+(-\d+)?$/
+
+services:
+  - docker
+
+install:
+  - go get -u golang.org/x/lint/golint
+
+before_script:
+  - srccheck/verify-gofmt.sh
+  - srccheck/verify-govet.sh
+  - srccheck/verify-golint.sh
+
+script:
+  - make build
+  - make test
+  - sonar-scanner
+  - make container-image
+  - make tag-image
+  - make publish

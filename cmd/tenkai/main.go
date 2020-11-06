@@ -32,12 +32,13 @@ func main() {
 	defer rabbitMQ.Conn.Close()
 	defer rabbitMQ.Channel.Close()
 
+	createQueues(rabbitMQ)
+
 	appContext.K8sConfigPath = global.KubeConfigBasePath
 	appContext.HelmServiceAPI = helmapi.HelmServiceBuilder()
 	initializeHelm(appContext)
 
 	handlers.StartConsumer(appContext)
-
 }
 
 func initializeHelm(appContext *handlers.AppContext) {
@@ -52,6 +53,29 @@ func initRabbit(uri string) rabbitmq.RabbitImpl {
 	rabbitMQ.Channel = rabbitMQ.GetChannel()
 
 	return rabbitMQ
+}
+
+func createQueues(rabbitMQ rabbitmq.RabbitImpl) {
+	createInstallQueue(rabbitMQ)
+	createResultInstallQueue(rabbitMQ)
+}
+
+func createInstallQueue(rabbitMQ rabbitmq.RabbitImpl) {
+	_, err := rabbitMQ.Channel.QueueDeclare("InstallQueue", true, false, false, false, nil)
+	if err != nil {
+		global.Logger.Error(
+			global.AppFields{global.Function: "createInstallQueue"},
+			"Could not declare InstallQueue - " + err.Error())
+	}
+}
+
+func createResultInstallQueue(rabbitMQ rabbitmq.RabbitImpl) {
+	_, err := rabbitMQ.Channel.QueueDeclare("ResultInstallQueue", true, false, false, false, nil)
+	if err != nil {
+		global.Logger.Error(
+			global.AppFields{global.Function: "createResultInstallQueue"},
+			"Could not declare ResultInstallQueue - " + err.Error())
+	}
 }
 
 func checkFatalError(err error) {

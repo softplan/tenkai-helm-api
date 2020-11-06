@@ -15,3 +15,10 @@ type RabbitPayloadConsumer struct {
 	Namespace      string `json:"namespace"`
 	DeploymentID   uint   `json:"deployment_id"`
 }
+
+//RabbitPayloadProducer producer
+type RabbitPayloadProducer struct {
+	Success        bool   `json:"sucess"`
+	Error          string `json:"error"`
+	DeploymentID   uint   `json:"deployment_id"`
+}
