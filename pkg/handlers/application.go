@@ -105,10 +105,46 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 	}()
 }
 
+func consumeDeleteRepoQueue(appContext *AppContext) {
+	msgs, err := appContext.RabbitImpl.GetConsumer(
+		rabbitmq.DeleteRepoQueue,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		global.Logger.Error(
+			global.AppFields{global.Function: "consumeDeleteRepoQueue", "error": err.Error()},
+			"error when call GetCosumer")
+		panic(err)
+	}
+
+	go func() {
+		for delivery := range msgs {
+			global.Logger.Info(
+				global.AppFields{global.Function: "consumeDeleteRepoQueue"},
+				"Message Received")
+			var repo string
+			repo = string(delivery.Body)
+			err = appContext.HelmServiceAPI.RemoveRepository(repo)
+			if err != nil {
+				global.Logger.Error(
+					global.AppFields{global.Function: "consumeDeleteRepoQueue"},
+					"Error when try to del some repo - "+err.Error())
+			}
+		}
+	}()
+}
+
 //StartConsumer start consume from queues
 func StartConsumer(appContext *AppContext) {
 	consumeInstallQueue(appContext)
 	consumeRepositoriesQueue(appContext)
+	consumeDeleteRepoQueue(appContext)
 
 	forever := make(chan bool)
 	global.Logger.Info(
