@@ -3,8 +3,11 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"log"
+	"net/http"
 	"sync"
 
+	"github.com/gorilla/mux"
 	"github.com/softplan/tenkai-helm-api/pkg/configs"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/softplan/tenkai-helm-api/pkg/model"
@@ -182,4 +185,37 @@ func (appContext *AppContext) sendInstallResponse(str string, err error, deploym
 			Body:        payloadJSON,
 		},
 	)
+}
+
+//StartHTTPServer StartHTTPServer
+func StartHTTPServer(appContext *AppContext) {
+
+	port := appContext.Configuration.Server.Port
+	global.Logger.Info(global.AppFields{global.Function: "startHTTPServer", "port": port}, "online - listen and server")
+
+	r := mux.NewRouter()
+
+	defineRotes(r, appContext)
+
+	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
+
+}
+
+func defineRotes(r *mux.Router, appContext *AppContext) {
+
+	r.HandleFunc("/health", appContext.health).Methods("GET")
+}
+
+func commonHandler(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

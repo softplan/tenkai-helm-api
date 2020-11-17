@@ -7,9 +7,15 @@ import (
 	"github.com/spf13/viper"
 )
 
+//Server - Dados do servidor
+type Server struct {
+	Port string
+}
+
 //Configuration - Configuração geral da aplicação
 type Configuration struct {
-	App App
+	App    App
+	Server Server
 }
 
 //App struct
