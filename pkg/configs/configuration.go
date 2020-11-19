@@ -35,7 +35,7 @@ func ReadConfig(configFile string) (*Configuration, error) {
 
 	viper.SetConfigName(configFile)
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("../../")
 	viper.AddConfigPath("/etc/")
 	viper.AddConfigPath("/tmp/")
 	viper.AddConfigPath("$HOME/")
@@ -50,5 +50,4 @@ func ReadConfig(configFile string) (*Configuration, error) {
 		return nil, fmt.Errorf("Error unmarshal config file, %s", err)
 	}
 	return &configuration, nil
-
 }
