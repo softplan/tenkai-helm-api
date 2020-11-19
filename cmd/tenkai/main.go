@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	configFileName = "app"
+	configFileName = "app-helm"
 )
 
 func main() {

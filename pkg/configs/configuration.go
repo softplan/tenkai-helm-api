@@ -35,7 +35,7 @@ func ReadConfig(configFile string) (*Configuration, error) {
 
 	viper.SetConfigName(configFile)
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("../../")
+	viper.AddConfigPath(".")
 	viper.AddConfigPath("/etc/")
 	viper.AddConfigPath("/tmp/")
 	viper.AddConfigPath("$HOME/")
