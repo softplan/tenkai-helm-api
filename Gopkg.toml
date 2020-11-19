@@ -81,7 +81,9 @@
   name = "github.com/helm/helm"
   revision = "v2.14.3"
 
-
+[[override]]
+  name = "github.com/gorilla/mux"
+  version = "v1.7.2"
 
 [prune]
   go-tests = true
