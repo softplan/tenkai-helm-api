@@ -192,6 +192,12 @@
   version = "v0.2.0"
 
 [[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "98cb6bf42e086f6af920b965c38cacc07402d51b"
+  version = "v1.8.0"
+
+[[projects]]
   name = "github.com/gosuri/uitable"
   packages = [".","util/strutil","util/wordwrap"]
   revision = "2cf933346b8370a3a3d8867ef5cf54b2129d8ecf"
@@ -588,6 +594,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f710e86f5982af7daeae2db1bbd0013f7ed1eefbb06c7c91b0bcac337da990eb"
+  inputs-digest = "5ff09d4235f4022f196ac7277da83422afad53c797d0cdf8350ad33a0fc34ca6"
   solver-name = "gps-cdcl"
   solver-version = 1

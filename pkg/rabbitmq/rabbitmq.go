@@ -22,6 +22,8 @@ type RabbitImpl struct {
 const (
 	InstallQueue       = "InstallQueue"
 	ResultInstallQueue = "ResultInstallQueue"
+	RepositoriesQueue  = "RepositoriesQueue"
+	DeleteRepoQueue    = "DeleteRepoQueue"
 )
 
 //GetConnection to the RabbitMQ Server

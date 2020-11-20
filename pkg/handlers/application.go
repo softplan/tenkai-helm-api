@@ -3,10 +3,14 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"log"
+	"net/http"
 	"sync"
 
+	"github.com/gorilla/mux"
 	"github.com/softplan/tenkai-helm-api/pkg/configs"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
+	"github.com/softplan/tenkai-helm-api/pkg/model"
 	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 	"github.com/softplan/tenkai-helm-api/pkg/service/core"
@@ -26,10 +30,9 @@ type AppContext struct {
 	Mutex               sync.Mutex
 }
 
-//StartConsumer start consume from queues
-func StartConsumer(appContext *AppContext) {
+func consumeInstallQueue(appContext *AppContext) {
 	msgs, err := appContext.RabbitImpl.GetConsumer(
-		"InstallQueue",
+		rabbitmq.InstallQueue,
 		"",
 		true,
 		false,
@@ -37,21 +40,23 @@ func StartConsumer(appContext *AppContext) {
 		false,
 		nil,
 	)
+
 	if err != nil {
 		global.Logger.Error(
-			global.AppFields{global.Function: "StartConsumer", "error": err.Error()},
+			global.AppFields{global.Function: "consumeInstallQueue", "error": err.Error()},
 			"error when call GetCosumer")
 		panic(err)
 	}
 
-	forever := make(chan bool)
-
 	go func() {
-		for d := range msgs {
+		for delivery := range msgs {
+			global.Logger.Info(
+				global.AppFields{global.Function: "consumeInstallQueue"},
+				"Message Received")
 			out := &bytes.Buffer{}
 
 			var payload rabbitmq.RabbitPayloadConsumer
-			json.Unmarshal([]byte(d.Body), &payload)
+			json.Unmarshal([]byte(delivery.Body), &payload)
 
 			createEnvironmentFile(
 				payload.Name,
@@ -63,17 +68,95 @@ func StartConsumer(appContext *AppContext) {
 			)
 
 			str, err := appContext.doUpgrade(payload.UpgradeRequest, out)
-			err = appContext.sendResponse(str, err, payload.DeploymentID)
+			err = appContext.sendInstallResponse(str, err, payload.DeploymentID)
 		}
 	}()
+}
 
+func consumeRepositoriesQueue(appContext *AppContext) {
+	msgs, err := appContext.RabbitImpl.GetConsumer(
+		rabbitmq.RepositoriesQueue,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		global.Logger.Error(
+			global.AppFields{global.Function: "consumeRepositoriesQueue", "error": err.Error()},
+			"error when call GetCosumer")
+		panic(err)
+	}
+
+	go func() {
+		for delivery := range msgs {
+			global.Logger.Info(
+				global.AppFields{global.Function: "consumeRepositoriesQueue"},
+				"Message Received")
+			var repo model.Repository
+			json.Unmarshal([]byte(delivery.Body), &repo)
+			err = appContext.HelmServiceAPI.AddRepository(repo)
+			if err != nil {
+				global.Logger.Error(
+					global.AppFields{global.Function: "consumeRepositoriesQueue"},
+					"Error when try to add a new repo - "+err.Error())
+			}
+		}
+	}()
+}
+
+func consumeDeleteRepoQueue(appContext *AppContext) {
+	msgs, err := appContext.RabbitImpl.GetConsumer(
+		rabbitmq.DeleteRepoQueue,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		global.Logger.Error(
+			global.AppFields{global.Function: "consumeDeleteRepoQueue", "error": err.Error()},
+			"error when call GetCosumer")
+		panic(err)
+	}
+
+	go func() {
+		for delivery := range msgs {
+			global.Logger.Info(
+				global.AppFields{global.Function: "consumeDeleteRepoQueue"},
+				"Message Received")
+			var repo string
+			repo = string(delivery.Body)
+			err = appContext.HelmServiceAPI.RemoveRepository(repo)
+			if err != nil {
+				global.Logger.Error(
+					global.AppFields{global.Function: "consumeDeleteRepoQueue"},
+					"Error when try to del some repo - "+err.Error())
+			}
+		}
+	}()
+}
+
+//StartConsumer start consume from queues
+func StartConsumer(appContext *AppContext) {
+	consumeInstallQueue(appContext)
+	consumeRepositoriesQueue(appContext)
+	consumeDeleteRepoQueue(appContext)
+
+	forever := make(chan bool)
 	global.Logger.Info(
 		global.AppFields{global.Function: "StartConsumer"},
 		"[*] Waiting for new messages")
 	<-forever
 }
 
-func (appContext *AppContext) sendResponse(str string, err error, deploymentID uint) error {
+func (appContext *AppContext) sendInstallResponse(str string, err error, deploymentID uint) error {
 	var success bool
 	var errorMessage string
 	if err != nil {
@@ -102,4 +185,38 @@ func (appContext *AppContext) sendResponse(str string, err error, deploymentID u
 			Body:        payloadJSON,
 		},
 	)
+}
+
+//StartHTTPServer StartHTTPServer
+func StartHTTPServer(appContext *AppContext) {
+
+	port := appContext.Configuration.Server.Port
+	global.Logger.Info(global.AppFields{global.Function: "startHTTPServer", "port": port}, "online - listen and server")
+
+	r := mux.NewRouter()
+
+	defineRotes(r, appContext)
+
+	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
+
+}
+
+func defineRotes(r *mux.Router, appContext *AppContext) {
+	r.HandleFunc("/health", appContext.health).Methods("GET")
+
+	r.HandleFunc("/charts/{repo}", appContext.listCharts).Methods("GET")
+}
+
+func commonHandler(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

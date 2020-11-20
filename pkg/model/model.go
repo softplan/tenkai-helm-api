@@ -37,3 +37,8 @@ type SearchResult struct {
 	AppVersion   string `json:"appVersion"`
 	Description  string `json:"description"`
 }
+
+//ChartsResult Model
+type ChartsResult struct {
+	Charts []SearchResult `json:"charts"`
+}

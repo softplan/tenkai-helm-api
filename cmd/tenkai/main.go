@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	configFileName = "app"
+	configFileName = "app-helm"
 )
 
 func main() {
@@ -38,7 +38,8 @@ func main() {
 	appContext.HelmServiceAPI = helmapi.HelmServiceBuilder()
 	initializeHelm(appContext)
 
-	handlers.StartConsumer(appContext)
+	go handlers.StartConsumer(appContext)
+	handlers.StartHTTPServer(appContext)
 }
 
 func initializeHelm(appContext *handlers.AppContext) {
@@ -56,25 +57,17 @@ func initRabbit(uri string) rabbitmq.RabbitImpl {
 }
 
 func createQueues(rabbitMQ rabbitmq.RabbitImpl) {
-	createInstallQueue(rabbitMQ)
-	createResultInstallQueue(rabbitMQ)
+	createQueue(rabbitmq.InstallQueue, rabbitMQ)
+	createQueue(rabbitmq.ResultInstallQueue, rabbitMQ)
+	createQueue(rabbitmq.RepositoriesQueue, rabbitMQ)
 }
 
-func createInstallQueue(rabbitMQ rabbitmq.RabbitImpl) {
-	_, err := rabbitMQ.Channel.QueueDeclare("InstallQueue", true, false, false, false, nil)
+func createQueue(queueName string, rabbitMQ rabbitmq.RabbitImpl) {
+	_, err := rabbitMQ.Channel.QueueDeclare(queueName, true, false, false, false, nil)
 	if err != nil {
 		global.Logger.Error(
-			global.AppFields{global.Function: "createInstallQueue"},
-			"Could not declare InstallQueue - "+err.Error())
-	}
-}
-
-func createResultInstallQueue(rabbitMQ rabbitmq.RabbitImpl) {
-	_, err := rabbitMQ.Channel.QueueDeclare("ResultInstallQueue", true, false, false, false, nil)
-	if err != nil {
-		global.Logger.Error(
-			global.AppFields{global.Function: "createResultInstallQueue"},
-			"Could not declare ResultInstallQueue - "+err.Error())
+			global.AppFields{global.Function: queueName},
+			"Could not declare "+queueName+" - "+err.Error())
 	}
 }
 
