@@ -23,4 +23,7 @@ const (
 
 	//JSONContentType JSONContentType
 	JSONContentType = "application/json; charset=UTF-8"
+
+	//MessageReceived MessageReceived
+	MessageReceived = "Message Received"
 )

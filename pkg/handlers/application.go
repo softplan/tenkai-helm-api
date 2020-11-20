@@ -31,6 +31,7 @@ type AppContext struct {
 }
 
 func consumeInstallQueue(appContext *AppContext) {
+	functionName := "consumeInstallQueue"
 	msgs, err := appContext.RabbitImpl.GetConsumer(
 		rabbitmq.InstallQueue,
 		"",
@@ -43,7 +44,7 @@ func consumeInstallQueue(appContext *AppContext) {
 
 	if err != nil {
 		global.Logger.Error(
-			global.AppFields{global.Function: "consumeInstallQueue", "error": err.Error()},
+			global.AppFields{global.Function: functionName, "error": err.Error()},
 			"error when call GetCosumer")
 		panic(err)
 	}
@@ -51,8 +52,8 @@ func consumeInstallQueue(appContext *AppContext) {
 	go func() {
 		for delivery := range msgs {
 			global.Logger.Info(
-				global.AppFields{global.Function: "consumeInstallQueue"},
-				"Message Received")
+				global.AppFields{global.Function: functionName},
+				global.MessageReceived)
 			out := &bytes.Buffer{}
 
 			var payload rabbitmq.RabbitPayloadConsumer
@@ -74,6 +75,7 @@ func consumeInstallQueue(appContext *AppContext) {
 }
 
 func consumeRepositoriesQueue(appContext *AppContext) {
+	functionName := "consumeRepositoriesQueue"
 	msgs, err := appContext.RabbitImpl.GetConsumer(
 		rabbitmq.RepositoriesQueue,
 		"",
@@ -86,7 +88,7 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 
 	if err != nil {
 		global.Logger.Error(
-			global.AppFields{global.Function: "consumeRepositoriesQueue", "error": err.Error()},
+			global.AppFields{global.Function: functionName, "error": err.Error()},
 			"error when call GetCosumer")
 		panic(err)
 	}
@@ -94,14 +96,14 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 	go func() {
 		for delivery := range msgs {
 			global.Logger.Info(
-				global.AppFields{global.Function: "consumeRepositoriesQueue"},
-				"Message Received")
+				global.AppFields{global.Function: functionName},
+				global.MessageReceived)
 			var repo model.Repository
 			json.Unmarshal([]byte(delivery.Body), &repo)
 			err = appContext.HelmServiceAPI.AddRepository(repo)
 			if err != nil {
 				global.Logger.Error(
-					global.AppFields{global.Function: "consumeRepositoriesQueue"},
+					global.AppFields{global.Function: functionName},
 					"Error when try to add a new repo - "+err.Error())
 			}
 		}
@@ -109,6 +111,7 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 }
 
 func consumeDeleteRepoQueue(appContext *AppContext) {
+	functionName := "consumeDeleteRepoQueue"
 	msgs, err := appContext.RabbitImpl.GetConsumer(
 		rabbitmq.DeleteRepoQueue,
 		"",
@@ -121,7 +124,7 @@ func consumeDeleteRepoQueue(appContext *AppContext) {
 
 	if err != nil {
 		global.Logger.Error(
-			global.AppFields{global.Function: "consumeDeleteRepoQueue", "error": err.Error()},
+			global.AppFields{global.Function: functionName, "error": err.Error()},
 			"error when call GetCosumer")
 		panic(err)
 	}
@@ -129,14 +132,14 @@ func consumeDeleteRepoQueue(appContext *AppContext) {
 	go func() {
 		for delivery := range msgs {
 			global.Logger.Info(
-				global.AppFields{global.Function: "consumeDeleteRepoQueue"},
-				"Message Received")
+				global.AppFields{global.Function: functionName},
+				global.MessageReceived)
 			var repo string
 			repo = string(delivery.Body)
 			err = appContext.HelmServiceAPI.RemoveRepository(repo)
 			if err != nil {
 				global.Logger.Error(
-					global.AppFields{global.Function: "consumeDeleteRepoQueue"},
+					global.AppFields{global.Function: functionName},
 					"Error when try to del some repo - "+err.Error())
 			}
 		}
