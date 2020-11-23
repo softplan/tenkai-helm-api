@@ -60,3 +60,8 @@ func (appContext *AppContext) listCharts(w http.ResponseWriter, r *http.Request)
 	w.Write(data)
 
 }
+
+func (appContext *AppContext) repoUpdate(w http.ResponseWriter, r *http.Request) {
+	global.Logger.Info(global.AppFields{global.Function: "repoUpdate"}, "Received repoUpdate request")
+	appContext.HelmServiceAPI.RepoUpdate()
+}
