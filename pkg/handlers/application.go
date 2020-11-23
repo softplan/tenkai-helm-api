@@ -208,6 +208,7 @@ func defineRotes(r *mux.Router, appContext *AppContext) {
 	r.HandleFunc("/health", appContext.health).Methods("GET")
 
 	r.HandleFunc("/charts/{repo}", appContext.listCharts).Methods("GET")
+	r.HandleFunc("/repoUpdate", appContext.repoUpdate).Methods("GET")
 }
 
 func commonHandler(next http.Handler) http.Handler {
