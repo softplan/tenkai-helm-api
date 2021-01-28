@@ -1,0 +1,15 @@
+server:
+  port: 8082
+app:
+  rabbit:
+    uri: amqp://guest:guest@localhost:5672
+elastic:
+  apm:
+    server:
+      url: ""
+    secret:
+      token: ""
+    service:
+      name: ""
+apm:
+  environment: ""
