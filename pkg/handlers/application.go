@@ -15,6 +15,7 @@ import (
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 	"github.com/softplan/tenkai-helm-api/pkg/service/core"
 	"github.com/streadway/amqp"
+	"go.elastic.co/apm/module/apmgorilla"
 )
 
 //AppContext AppContext
@@ -205,6 +206,7 @@ func StartHTTPServer(appContext *AppContext) {
 }
 
 func defineRotes(r *mux.Router, appContext *AppContext) {
+	r.Use(apmgorilla.Middleware())
 	r.HandleFunc("/health", appContext.health).Methods("GET")
 
 	r.HandleFunc("/charts/{repo}", appContext.listCharts).Methods("GET")
