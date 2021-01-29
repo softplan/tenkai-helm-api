@@ -11,6 +11,7 @@ build: pre-build
 
 test:
 	@echo "Testing tenkai-helm-api"
+	cp app-helm.yaml ~/
 	go test -v -covermode=count -coverprofile=coverage.out $(shell go list ./... | grep -v /vendor/ | grep -v /mocks/ | grep -v pkg/service/_helm/)
 	go tool cover -html=coverage.out -o coverage.html
 
