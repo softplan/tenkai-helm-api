@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"sync"
 
@@ -221,7 +222,7 @@ func StartHTTPServer(appContext *AppContext) {
 
 	defineRotes(r, appContext)
 
-	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r))) DESCOMENTAR ANTES DO PR
+	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
 
 }
 

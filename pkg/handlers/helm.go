@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
-	"github.com/softplan/tenkai-helm-api/pkg/model"
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 )
 
