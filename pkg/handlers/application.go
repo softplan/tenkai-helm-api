@@ -3,20 +3,27 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"sync"
 
+	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
+	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
+
 	"github.com/gorilla/mux"
 	"github.com/softplan/tenkai-helm-api/pkg/configs"
+	"github.com/softplan/tenkai-helm-api/pkg/dbms"
+	"github.com/softplan/tenkai-helm-api/pkg/dbms/repository"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
-	"github.com/softplan/tenkai-helm-api/pkg/model"
-	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 	"github.com/softplan/tenkai-helm-api/pkg/service/core"
 	"github.com/streadway/amqp"
 	"go.elastic.co/apm/module/apmgorilla"
 )
+
+//Repositories struct
+type Repositories struct {
+	RepoDAO repository.RepoDAOInterface
+}
 
 //AppContext AppContext
 type AppContext struct {
@@ -29,6 +36,8 @@ type AppContext struct {
 	ConfigMapCache      sync.Map
 	RabbitImpl          rabbitmq.RabbitInterface
 	Mutex               sync.Mutex
+	Database            dbms.Database
+	Repositories        Repositories
 }
 
 func consumeInstallQueue(appContext *AppContext) {
@@ -101,6 +110,7 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 				global.MessageReceived)
 			var repo model.Repository
 			json.Unmarshal([]byte(delivery.Body), &repo)
+			appContext.addRepository(repo)
 			err = appContext.HelmServiceAPI.AddRepository(repo)
 			if err != nil {
 				global.Logger.Error(
@@ -109,6 +119,16 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 			}
 		}
 	}()
+}
+
+func (appContext *AppContext) addRepository(repo model.Repository) error {
+	err := appContext.Repositories.RepoDAO.CreateOrUpdate(repo)
+	if err != nil {
+		global.Logger.Error(
+			global.AppFields{global.Function: "addRepository"},
+			"Error when try to add a new repo on database - "+err.Error())
+	}
+	return err
 }
 
 func consumeDeleteRepoQueue(appContext *AppContext) {
@@ -201,7 +221,7 @@ func StartHTTPServer(appContext *AppContext) {
 
 	defineRotes(r, appContext)
 
-	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
+	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r))) DESCOMENTAR ANTES DO PR
 
 }
 

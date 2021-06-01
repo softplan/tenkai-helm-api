@@ -2,9 +2,9 @@ package helmapi
 
 import (
 	"fmt"
+	model2 "github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"time"
 
-	"github.com/softplan/tenkai-helm-api/pkg/model"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/duration"
@@ -23,8 +23,8 @@ func (svc HelmServiceImpl) DeletePod(kubeconfig string, podName string, namespac
 }
 
 //GetPods Method
-func (svc HelmServiceImpl) GetPods(kubeconfig string, namespace string) ([]model.Pod, error) {
-	pods := make([]model.Pod, 0)
+func (svc HelmServiceImpl) GetPods(kubeconfig string, namespace string) ([]model2.Pod, error) {
+	pods := make([]model2.Pod, 0)
 	_, client, err := svc.GetHelmConnection().GetKubeClient("", kubeconfig)
 	if err != nil {
 		return pods, err
@@ -34,7 +34,7 @@ func (svc HelmServiceImpl) GetPods(kubeconfig string, namespace string) ([]model
 	if err != nil {
 		return pods, err
 	}
-	var pod *model.Pod
+	var pod *model2.Pod
 	for _, element := range list.Items {
 		pod = fillPod(element)
 		pods = append(pods, *pod)
@@ -42,9 +42,9 @@ func (svc HelmServiceImpl) GetPods(kubeconfig string, namespace string) ([]model
 	return pods, nil
 }
 
-func fillPod(pod v1.Pod) *model.Pod {
+func fillPod(pod v1.Pod) *model2.Pod {
 
-	result := &model.Pod{Name: pod.Name}
+	result := &model2.Pod{Name: pod.Name}
 
 	restarts := 0
 	totalContainers := len(pod.Spec.Containers)

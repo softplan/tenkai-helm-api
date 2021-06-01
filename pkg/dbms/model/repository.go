@@ -1,7 +1,10 @@
 package model
 
+import "github.com/jinzhu/gorm"
+
 //Repository struct
 type Repository struct {
+	gorm.Model
 	Name     string `json:"name"`
 	URL      string `json:"url"`
 	Username string `json:"username"`

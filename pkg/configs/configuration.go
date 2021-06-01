@@ -21,10 +21,16 @@ type Configuration struct {
 //App struct
 type App struct {
 	Rabbit Rabbit
+	Dbms   Dbms
 }
 
 //Rabbit struct
 type Rabbit struct {
+	URI string
+}
+
+//Dbms struct
+type Dbms struct {
 	URI string
 }
 

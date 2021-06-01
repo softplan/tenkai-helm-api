@@ -2,12 +2,11 @@ package helmapi
 
 import (
 	"fmt"
+	model2 "github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"io"
 	"os"
 
 	"github.com/softplan/tenkai-helm-api/pkg/global"
-	"github.com/softplan/tenkai-helm-api/pkg/model"
-
 	"k8s.io/helm/pkg/getter"
 	"k8s.io/helm/pkg/helm/helmpath"
 	"k8s.io/helm/pkg/repo"
@@ -27,7 +26,7 @@ type repoAddCmd struct {
 }
 
 //AddRepository - Add new repository
-func (svc HelmServiceImpl) AddRepository(repo model.Repository) error {
+func (svc HelmServiceImpl) AddRepository(repo model2.Repository) error {
 	add := &repoAddCmd{out: os.Stdout}
 	add.name = repo.Name
 	add.url = repo.URL

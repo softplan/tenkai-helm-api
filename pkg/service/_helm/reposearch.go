@@ -2,6 +2,7 @@ package helmapi
 
 import (
 	"fmt"
+	model2 "github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"strings"
 
 	"github.com/softplan/tenkai-helm-api/pkg/global"
@@ -9,7 +10,6 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/gosuri/uitable"
 	"github.com/helm/helm/cmd/helm/search"
-	"github.com/softplan/tenkai-helm-api/pkg/model"
 	"k8s.io/helm/pkg/helm/helmpath"
 	"k8s.io/helm/pkg/repo"
 )
@@ -28,7 +28,7 @@ type searchCmd struct {
 }
 
 //SearchCharts Methotd
-func (svc HelmServiceImpl) SearchCharts(searchTerms []string, allVersions bool) *[]model.SearchResult {
+func (svc HelmServiceImpl) SearchCharts(searchTerms []string, allVersions bool) *[]model2.SearchResult {
 
 	logFields := global.AppFields{global.Function: "SearchCharts"}
 
@@ -50,10 +50,10 @@ func (svc HelmServiceImpl) SearchCharts(searchTerms []string, allVersions bool) 
 	global.Logger.Info(logFields, "Filling model")
 	res := sc.out
 
-	var sr []model.SearchResult
+	var sr []model2.SearchResult
 
 	for _, r := range res {
-		item := &model.SearchResult{Name: r.Name, ChartVersion: r.Chart.Version, AppVersion: r.Chart.AppVersion, Description: r.Chart.Description}
+		item := &model2.SearchResult{Name: r.Name, ChartVersion: r.Chart.Version, AppVersion: r.Chart.AppVersion, Description: r.Chart.Description}
 		sr = append(sr, *item)
 	}
 
