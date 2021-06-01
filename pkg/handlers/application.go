@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
-	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
+	"github.com/softplan/tenkai-helm-api/pkg/service/rabbitmq"
 	"github.com/softplan/tenkai-helm-api/pkg/util"
 
 	"github.com/gorilla/mux"

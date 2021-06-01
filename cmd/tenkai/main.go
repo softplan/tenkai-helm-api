@@ -9,8 +9,8 @@ import (
 	"github.com/softplan/tenkai-helm-api/pkg/dbms/repository"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/softplan/tenkai-helm-api/pkg/handlers"
-	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
+	"github.com/softplan/tenkai-helm-api/pkg/service/rabbitmq"
 )
 
 const (
