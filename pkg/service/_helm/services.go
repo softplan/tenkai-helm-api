@@ -2,9 +2,9 @@ package helmapi
 
 import (
 	"fmt"
+	model2 "github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"strings"
 
-	"github.com/softplan/tenkai-helm-api/pkg/model"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -13,8 +13,8 @@ import (
 const loadBalancerWidth = 16
 
 //GetServices - Get Service information
-func (svc HelmServiceImpl) GetServices(kubeconfig string, namespace string) ([]model.Service, error) {
-	services := make([]model.Service, 0)
+func (svc HelmServiceImpl) GetServices(kubeconfig string, namespace string) ([]model2.Service, error) {
+	services := make([]model2.Service, 0)
 	_, client, err := svc.GetHelmConnection().GetKubeClient("", kubeconfig)
 	if err != nil {
 		return services, err
@@ -24,7 +24,7 @@ func (svc HelmServiceImpl) GetServices(kubeconfig string, namespace string) ([]m
 	if err != nil {
 		return services, err
 	}
-	var service *model.Service
+	var service *model2.Service
 	for _, element := range list.Items {
 		service = fillService(element)
 		services = append(services, *service)
@@ -44,8 +44,8 @@ func makePortString(ports []v1.ServicePort) string {
 	return strings.Join(pieces, ",")
 }
 
-func fillService(service v1.Service) *model.Service {
-	result := model.Service{Name: service.Name}
+func fillService(service v1.Service) *model2.Service {
+	result := model2.Service{Name: service.Name}
 	result.ClusterIP = service.Spec.ClusterIP
 	result.ExternalIP = getServiceExternalIP(&service, false)
 	result.Ports = makePortString(service.Spec.Ports)

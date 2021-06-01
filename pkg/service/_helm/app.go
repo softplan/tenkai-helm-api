@@ -3,6 +3,7 @@ package helmapi
 import (
 	"bytes"
 	"fmt"
+	model2 "github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"sync"
 
 	"google.golang.org/grpc/status"
@@ -11,20 +12,18 @@ import (
 	"k8s.io/helm/pkg/helm"
 	"k8s.io/helm/pkg/helm/portforwarder"
 	"k8s.io/helm/pkg/kube"
-
-	"github.com/softplan/tenkai-helm-api/pkg/model"
 )
 
 //HelmServiceInterface - Interface
 type HelmServiceInterface interface {
 	InitializeHelm()
-	GetServices(kubeconfig string, namespace string) ([]model.Service, error)
+	GetServices(kubeconfig string, namespace string) ([]model2.Service, error)
 	DeletePod(kubeconfig string, podName string, namespace string) error
-	GetPods(kubeconfig string, namespace string) ([]model.Pod, error)
-	AddRepository(repo model.Repository) error
-	GetRepositories() ([]model.Repository, error)
+	GetPods(kubeconfig string, namespace string) ([]model2.Pod, error)
+	AddRepository(repo model2.Repository) error
+	GetRepositories() ([]model2.Repository, error)
 	RemoveRepository(name string) error
-	SearchCharts(searchTerms []string, allVersions bool) *[]model.SearchResult
+	SearchCharts(searchTerms []string, allVersions bool) *[]model2.SearchResult
 	DeleteHelmRelease(kubeconfig string, releaseName string, purge bool) error
 	Get(kubeconfig string, releaseName string, revision int) (string, error)
 	IsThereAnyPodWithThisVersion(kubeconfig string, namespace string, releaseName string, tag string) (bool, error)

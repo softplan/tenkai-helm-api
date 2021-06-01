@@ -2,14 +2,14 @@ package helmapi
 
 import (
 	"errors"
+	model2 "github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 
 	"github.com/softplan/tenkai-helm-api/pkg/global"
-	"github.com/softplan/tenkai-helm-api/pkg/model"
 	"k8s.io/helm/pkg/repo"
 )
 
 //GetRepositories - Returns a repository list
-func (svc HelmServiceImpl) GetRepositories() ([]model.Repository, error) {
+func (svc HelmServiceImpl) GetRepositories() ([]model2.Repository, error) {
 
 	settings := GetSettings()
 
@@ -17,7 +17,7 @@ func (svc HelmServiceImpl) GetRepositories() ([]model.Repository, error) {
 
 	global.Logger.Info(logFields, "Starting GetRepositories: "+settings.Home.RepositoryFile())
 
-	var repositories []model.Repository
+	var repositories []model2.Repository
 
 	f, err := repo.LoadRepositoriesFile(settings.Home.RepositoryFile())
 	if err != nil {
@@ -30,7 +30,7 @@ func (svc HelmServiceImpl) GetRepositories() ([]model.Repository, error) {
 	}
 
 	for _, re := range f.Repositories {
-		rep := &model.Repository{Name: re.Name, URL: re.URL, Username: re.Username, Password: re.Password}
+		rep := &model2.Repository{Name: re.Name, URL: re.URL, Username: re.Username, Password: re.Password}
 		repositories = append(repositories, *rep)
 	}
 

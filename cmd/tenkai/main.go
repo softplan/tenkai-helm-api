@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/softplan/tenkai-helm-api/pkg/configs"
+	"github.com/softplan/tenkai-helm-api/pkg/dbms"
+	"github.com/softplan/tenkai-helm-api/pkg/dbms/repository"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/softplan/tenkai-helm-api/pkg/handlers"
 	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
@@ -25,6 +27,11 @@ func main() {
 	checkFatalError(err)
 
 	appContext := &handlers.AppContext{Configuration: config}
+
+	dbmsURI := config.App.Dbms.URI
+	appContext.Database.Connect(dbmsURI, dbmsURI == "")
+	appContext.Repositories = initRepository(&appContext.Database)
+	defer appContext.Database.Db.Close()
 
 	//RabbitMQ Connection
 	rabbitMQ := initRabbit(config.App.Rabbit.URI)
@@ -69,6 +76,12 @@ func createQueue(queueName string, rabbitMQ rabbitmq.RabbitImpl) {
 			global.AppFields{global.Function: queueName},
 			"Could not declare "+queueName+" - "+err.Error())
 	}
+}
+
+func initRepository(database *dbms.Database) handlers.Repositories {
+	repositories := handlers.Repositories{}
+	repositories.RepoDAO = &repository.RepoDAOImpl{Db: database.Db}
+	return repositories
 }
 
 func checkFatalError(err error) {
