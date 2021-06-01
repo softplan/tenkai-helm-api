@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"github.com/softplan/tenkai-helm-api/pkg/rabbitmq"
+	"github.com/softplan/tenkai-helm-api/pkg/util"
 
 	"github.com/gorilla/mux"
 	"github.com/softplan/tenkai-helm-api/pkg/configs"
@@ -111,7 +113,7 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 				global.MessageReceived)
 			var repo model.Repository
 			json.Unmarshal([]byte(delivery.Body), &repo)
-			appContext.addRepository(repo)
+			appContext.addRepositoryToDB(repo)
 			err = appContext.HelmServiceAPI.AddRepository(repo)
 			if err != nil {
 				global.Logger.Error(
@@ -122,7 +124,9 @@ func consumeRepositoriesQueue(appContext *AppContext) {
 	}()
 }
 
-func (appContext *AppContext) addRepository(repo model.Repository) error {
+func (appContext *AppContext) addRepositoryToDB(repo model.Repository) error {
+	passKey := appContext.Configuration.App.PassKey
+	repo.Password = encryptRepoPassword(repo.Password, passKey)
 	err := appContext.Repositories.RepoDAO.CreateOrUpdate(repo)
 	if err != nil {
 		global.Logger.Error(
@@ -222,14 +226,14 @@ func StartHTTPServer(appContext *AppContext) {
 
 	defineRotes(r, appContext)
 
-	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
+	appContext.initRepos()
 
+	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
 }
 
 func defineRotes(r *mux.Router, appContext *AppContext) {
 	r.Use(apmgorilla.Middleware())
 	r.HandleFunc("/health", appContext.health).Methods("GET")
-
 	r.HandleFunc("/charts/{repo}", appContext.listCharts).Methods("GET")
 	r.HandleFunc("/repoUpdate", appContext.repoUpdate).Methods("GET")
 }
@@ -246,4 +250,39 @@ func commonHandler(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (appContext *AppContext) initRepos() error {
+	repos, err := appContext.Repositories.RepoDAO.All()
+	passKey := appContext.Configuration.App.PassKey
+	for _, repo := range repos {
+		repo.Password, err = decryptRepoPassword(repo.Password, passKey)
+		if err != nil {
+			global.Logger.Error(
+				global.AppFields{global.Function: "initRepos"},
+				"Error when try to add a new repo - "+err.Error())
+			continue
+		}
+		err = appContext.HelmServiceAPI.AddRepository(repo)
+		if err != nil {
+			global.Logger.Error(
+				global.AppFields{global.Function: "initRepos"},
+				"Error when try to add a new repo - "+err.Error())
+		}
+	}
+	return err
+}
+
+func encryptRepoPassword(password, passKey string) string {
+	secret := util.Encrypt([]byte(password), passKey)
+	return hex.EncodeToString(secret)
+}
+
+func decryptRepoPassword(cryptedPassword, passKey string) (string, error) {
+	data, _ := json.Marshal(cryptedPassword)
+	decryptedPassword, err := util.Decrypt(data, passKey)
+	if err != nil {
+		return "", err
+	}
+	return string(decryptedPassword), err
 }

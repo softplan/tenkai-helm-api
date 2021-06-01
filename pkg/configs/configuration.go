@@ -22,6 +22,7 @@ type Configuration struct {
 type App struct {
 	Rabbit Rabbit
 	Dbms   Dbms
+	PassKey string
 }
 
 //Rabbit struct
