@@ -22,11 +22,3 @@ type RabbitPayloadProducer struct {
 	Error        string `json:"error"`
 	DeploymentID uint   `json:"deployment_id"`
 }
-
-//Repository get from quee
-type Repository struct {
-	Name     string `json:"name"`
-	URL      string `json:"url"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}

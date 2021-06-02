@@ -2,7 +2,10 @@ package main
 
 import (
 	"log"
+	"math/rand"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/softplan/tenkai-helm-api/pkg/configs"
 	"github.com/softplan/tenkai-helm-api/pkg/dbms"
@@ -33,48 +36,26 @@ func main() {
 	appContext.Repositories = initRepository(&appContext.Database)
 	defer appContext.Database.Db.Close()
 
+	queues := getQueues()
 	//RabbitMQ Connection
-	rabbitMQ := initRabbit(config.App.Rabbit.URI)
-	appContext.RabbitImpl = rabbitMQ
+	rabbitMQ, err := rabbitmq.InitRabbit(config.App.Rabbit.URI, queues)
+	checkFatalError(err)
+
+	appContext.RabbitMQ = rabbitMQ
 	defer rabbitMQ.Conn.Close()
 	defer rabbitMQ.Channel.Close()
-
-	createQueues(rabbitMQ)
 
 	appContext.K8sConfigPath = global.KubeConfigBasePath
 	appContext.HelmServiceAPI = helmapi.HelmServiceBuilder()
 	initializeHelm(appContext)
 
-	go handlers.StartConsumer(appContext)
+	handlers.StartConsumer(appContext)
 	handlers.StartHTTPServer(appContext)
 }
 
 func initializeHelm(appContext *handlers.AppContext) {
 	if _, err := os.Stat(global.HelmDir + "/repository/repositories.yaml"); os.IsNotExist(err) {
 		appContext.HelmServiceAPI.InitializeHelm()
-	}
-}
-
-func initRabbit(uri string) rabbitmq.RabbitImpl {
-	rabbitMQ := rabbitmq.RabbitImpl{}
-	rabbitMQ.Conn = rabbitMQ.GetConnection(uri)
-	rabbitMQ.Channel = rabbitMQ.GetChannel()
-
-	return rabbitMQ
-}
-
-func createQueues(rabbitMQ rabbitmq.RabbitImpl) {
-	createQueue(rabbitmq.InstallQueue, rabbitMQ)
-	createQueue(rabbitmq.ResultInstallQueue, rabbitMQ)
-	createQueue(rabbitmq.RepositoriesQueue, rabbitMQ)
-}
-
-func createQueue(queueName string, rabbitMQ rabbitmq.RabbitImpl) {
-	_, err := rabbitMQ.Channel.QueueDeclare(queueName, true, false, false, false, nil)
-	if err != nil {
-		global.Logger.Error(
-			global.AppFields{global.Function: queueName},
-			"Could not declare "+queueName+" - "+err.Error())
 	}
 }
 
@@ -89,4 +70,21 @@ func checkFatalError(err error) {
 		global.Logger.Error(global.AppFields{global.Function: "upload", "error": err}, "erro fatal")
 		log.Fatal(err)
 	}
+}
+
+func getQueues() rabbitmq.Queues {
+	queues := rabbitmq.Queues{
+		InstallQueue:       "InstallQueue",
+		ResultInstallQueue: "ResultInstallQueue",
+		DeleteRepoQueue:    "DeleteRepoQueue",
+	}
+	queues.AddRepoQueue = "RepositoriesQueue" + getRandomSufix()
+	return queues
+}
+
+func getRandomSufix() string {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	sufix := r.Intn(1000)
+	return strconv.Itoa(sufix)
 }
