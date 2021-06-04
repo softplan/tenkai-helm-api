@@ -6,51 +6,29 @@ import (
 
 	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/softplan/tenkai-helm-api/pkg/service/rabbitmq"
+
 	"github.com/streadway/amqp"
 )
 
-func consumeInstallQueue(appContext *AppContext) {
-	functionName := "consumeInstallQueue"
-	msgs, err := appContext.RabbitMQ.GetConsumer(
-		appContext.Queues.InstallQueue,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
+func (appContext *AppContext) handleInstallQueue(payload rabbitmq.Install) error {
+	global.Logger.Info(
+		global.AppFields{global.Function: "handleInstallQueue"},
+		global.MessageReceived)
+
+	createEnvironmentFile(
+		payload.Name,
+		payload.Token,
+		payload.Filename,
+		payload.CACertificate,
+		payload.ClusterURI,
+		payload.Namespace,
 	)
 
-	if err != nil {
-		global.Logger.Error(
-			global.AppFields{global.Function: functionName, "error": err.Error()},
-			"error when call GetCosumer")
-		panic(err)
-	}
+	out := &bytes.Buffer{}
+	str, err := appContext.doUpgrade(payload.UpgradeRequest, out)
+	err = appContext.sendInstallResponse(str, err, payload.DeploymentID)
 
-	go func() {
-		for delivery := range msgs {
-			global.Logger.Info(
-				global.AppFields{global.Function: functionName},
-				global.MessageReceived)
-			out := &bytes.Buffer{}
-
-			var payload rabbitmq.RabbitPayloadConsumer
-			json.Unmarshal([]byte(delivery.Body), &payload)
-
-			createEnvironmentFile(
-				payload.Name,
-				payload.Token,
-				payload.Filename,
-				payload.CACertificate,
-				payload.ClusterURI,
-				payload.Namespace,
-			)
-
-			str, err := appContext.doUpgrade(payload.UpgradeRequest, out)
-			err = appContext.sendInstallResponse(str, err, payload.DeploymentID)
-		}
-	}()
+	return nil
 }
 
 func (appContext *AppContext) sendInstallResponse(str string, err error, deploymentID uint) error {

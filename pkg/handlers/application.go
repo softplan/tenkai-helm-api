@@ -42,10 +42,10 @@ type AppContext struct {
 
 //StartConsumer start consume from queues
 func StartConsumer(appContext *AppContext) {
-	go appContext.RabbitMQ.ConsumeRepoQueue(appContext.Queues.AddRepoQueue, appContext.handleRepoQueue, model.Repository{})
-	//go consumeInstallQueue(appContext)
+	go appContext.RabbitMQ.ConsumeRepoQueue(appContext.handleRepoQueue, model.Repository{})
+	go appContext.RabbitMQ.ConsumeInstallQueue(appContext.handleInstallQueue, rabbitmq.Install{})
 	//go consumeRepositoriesQueue(appContext)
-	//go consumeDeleteRepoQueue(appContext)
+	go consumeDeleteRepoQueue(appContext)
 
 	forever1 := make(chan bool)
 	global.Logger.Info(

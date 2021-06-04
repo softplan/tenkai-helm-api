@@ -16,14 +16,16 @@ type RabbitInterface interface {
 	GetConsumer(queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args amqp.Table) (<-chan amqp.Delivery, error)
 	CreateQueue(queueName string) error
 	CreateFanoutExchange(name string) error
-	ConsumeRepoQueue(queueName string, fn HandlerRepo, repo model.Repository) error
 	Bind(queueName, routingKey, exchange string) error
+	ConsumeRepoQueue(fn HandlerRepo, repo model.Repository) error
+	ConsumeInstallQueue(fn HandlerInstall, install Install) error
 }
 
 //RabbitImpl struct
 type RabbitImpl struct {
 	Conn    *amqp.Connection
 	Channel *amqp.Channel
+	Queues  Queues
 }
 
 //Queues struct
@@ -36,6 +38,9 @@ type Queues struct {
 
 //HandlerRepo func that handles with msg RepositoriesQueue
 type HandlerRepo func(model.Repository) error
+
+//HandlerInstall func
+type HandlerInstall func(Install) error
 
 //Exchanges
 const (
@@ -87,15 +92,30 @@ func (rabbit RabbitImpl) CreateFanoutExchange(name string) error {
 }
 
 //ConsumeRepoQueue func
-func (rabbit RabbitImpl) ConsumeRepoQueue(queueName string, fn HandlerRepo, repo model.Repository) error {
-	msgs, err := rabbit.Channel.Consume(queueName, "", true, false, false, false, nil)
+func (rabbit RabbitImpl) ConsumeRepoQueue(fn HandlerRepo, repo model.Repository) error {
+	msgs, err := rabbit.Channel.Consume(rabbit.Queues.AddRepoQueue, "", true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 	for msg := range msgs {
-		fmt.Println("Message Received")
 		if err := json.Unmarshal(msg.Body, &repo); err == nil {
 			fn(repo)
+		} else {
+			fmt.Println("Error", err.Error())
+		}
+	}
+	return nil
+}
+
+//ConsumeInstallQueue func
+func (rabbit RabbitImpl) ConsumeInstallQueue(fn HandlerInstall, install Install) error {
+	msgs, err := rabbit.Channel.Consume(rabbit.Queues.InstallQueue, "", true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+	for msg := range msgs {
+		if err := json.Unmarshal(msg.Body, &install); err == nil {
+			fn(install)
 		} else {
 			fmt.Println("Error", err.Error())
 		}
