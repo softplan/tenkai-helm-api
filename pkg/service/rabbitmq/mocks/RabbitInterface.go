@@ -30,13 +30,27 @@ func (_m *RabbitInterface) Bind(queueName string, routingKey string, exchange st
 	return r0
 }
 
-// ConsumeRepoQueue provides a mock function with given fields: queueName, fn, repo
-func (_m *RabbitInterface) ConsumeRepoQueue(queueName string, fn rabbitmq.HandlerRepo, repo model.Repository) error {
-	ret := _m.Called(queueName, fn, repo)
+// ConsumeInstallQueue provides a mock function with given fields: fn, install
+func (_m *RabbitInterface) ConsumeInstallQueue(fn rabbitmq.HandlerInstall, install rabbitmq.Install) error {
+	ret := _m.Called(fn, install)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, rabbitmq.HandlerRepo, model.Repository) error); ok {
-		r0 = rf(queueName, fn, repo)
+	if rf, ok := ret.Get(0).(func(rabbitmq.HandlerInstall, rabbitmq.Install) error); ok {
+		r0 = rf(fn, install)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ConsumeRepoQueue provides a mock function with given fields: fn, repo
+func (_m *RabbitInterface) ConsumeRepoQueue(fn rabbitmq.HandlerRepo, repo model.Repository) error {
+	ret := _m.Called(fn, repo)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(rabbitmq.HandlerRepo, model.Repository) error); ok {
+		r0 = rf(fn, repo)
 	} else {
 		r0 = ret.Error(0)
 	}
