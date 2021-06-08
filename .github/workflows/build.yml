@@ -1,4 +1,4 @@
-name: tenkai-api-ci CI
+name: tenkai-helm-ci CI
 
 on: [push, pull_request]
       
