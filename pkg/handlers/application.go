@@ -42,16 +42,17 @@ type AppContext struct {
 
 //StartConsumer start consume from queues
 func StartConsumer(appContext *AppContext) {
+	appContext.initRepos()
 	go appContext.RabbitMQ.ConsumeRepoQueue(appContext.handleRepoQueue, model.Repository{})
+	go appContext.RabbitMQ.ConsumeDeleteRepoQueue(appContext.handleDeleteRepoQueue)
+	go appContext.RabbitMQ.ConsumeUpdateRepoQueue(appContext.handleUpdateRepoQueue)
 	go appContext.RabbitMQ.ConsumeInstallQueue(appContext.handleInstallQueue, rabbitmq.Install{})
-	//go consumeRepositoriesQueue(appContext)
-	go consumeDeleteRepoQueue(appContext)
 
-	forever1 := make(chan bool)
+	forever := make(chan bool)
 	global.Logger.Info(
 		global.AppFields{global.Function: "StartConsumer"},
 		"[*] Waiting for new messages")
-	<-forever1
+	<-forever
 }
 
 //StartHTTPServer StartHTTPServer
@@ -64,8 +65,6 @@ func StartHTTPServer(appContext *AppContext) {
 
 	defineRotes(r, appContext)
 
-	appContext.initRepos()
-
 	portInt, _ := strconv.Atoi(port)
 	port = strconv.Itoa(portInt + 1)
 	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
@@ -75,7 +74,6 @@ func defineRotes(r *mux.Router, appContext *AppContext) {
 	r.Use(apmgorilla.Middleware())
 	r.HandleFunc("/health", appContext.health).Methods("GET")
 	r.HandleFunc("/charts/{repo}", appContext.listCharts).Methods("GET")
-	r.HandleFunc("/repoUpdate", appContext.repoUpdate).Methods("GET")
 }
 
 func commonHandler(next http.Handler) http.Handler {

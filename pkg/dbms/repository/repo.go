@@ -9,6 +9,7 @@ import (
 type RepoDAOInterface interface {
 	CreateOrUpdate(repo model.Repository) error
 	All() ([]model.Repository, error)
+	Delete(repo string) error
 }
 
 //RepoDAOImpl struct
@@ -28,4 +29,9 @@ func (dao RepoDAOImpl) CreateOrUpdate(repo model.Repository) error {
 func (dao RepoDAOImpl) All() ([]model.Repository, error) {
 	list := []model.Repository{}
 	return list, dao.Db.Find(&list).Error
+}
+
+//Delete func
+func (dao RepoDAOImpl) Delete(repo string) error {
+	return dao.Db.Where("name = ?", repo).Delete(&model.Repository{}).Error
 }

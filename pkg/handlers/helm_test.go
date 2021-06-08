@@ -73,20 +73,3 @@ func TestDoUpgrade(t *testing.T) {
 	assert.Equal(t, "", str, "Response should be \"\"")
 	assert.NoError(t, err)
 }
-
-func TestRepoUpdate(t *testing.T) {
-	mockHelm := mockSvc.HelmServiceInterface{}
-	mockHelm.On("RepoUpdate").Return(nil)
-
-	appContext := AppContext{}
-	appContext.HelmServiceAPI = &mockHelm
-
-	req, err := http.NewRequest("GET", "/repoUpdate", nil)
-	assert.NoError(t, err)
-
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(appContext.repoUpdate)
-	handler.ServeHTTP(rr, req)
-
-	assert.Equal(t, http.StatusOK, rr.Code, "Response is not OK")
-}

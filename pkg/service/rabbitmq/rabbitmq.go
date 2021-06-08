@@ -14,11 +14,13 @@ type RabbitInterface interface {
 	GetChannel() *amqp.Channel
 	Publish(exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error
 	GetConsumer(queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args amqp.Table) (<-chan amqp.Delivery, error)
-	CreateQueue(queueName string) error
+	CreateQueue(queueName string, exclusive bool) error
 	CreateFanoutExchange(name string) error
 	Bind(queueName, routingKey, exchange string) error
 	ConsumeRepoQueue(fn HandlerRepo, repo model.Repository) error
 	ConsumeInstallQueue(fn HandlerInstall, install Install) error
+	ConsumeDeleteRepoQueue(fn HandlerDeleteRepoQueue) error
+	ConsumeUpdateRepoQueue(fn HandlerUpdateRepoQueue) error
 }
 
 //RabbitImpl struct
@@ -34,6 +36,7 @@ type Queues struct {
 	ResultInstallQueue string
 	AddRepoQueue       string
 	DeleteRepoQueue    string
+	UpdateRepoQueue    string
 }
 
 //HandlerRepo func that handles with msg RepositoriesQueue
@@ -42,17 +45,24 @@ type HandlerRepo func(model.Repository) error
 //HandlerInstall func
 type HandlerInstall func(Install) error
 
+//HandlerDeleteRepoQueue func
+type HandlerDeleteRepoQueue func(string) error
+
+//HandlerUpdateRepoQueue func
+type HandlerUpdateRepoQueue func() error
+
 //Exchanges
 const (
-	ExchangeAddRepo = "add.repository.fx"
+	ExchangeAddRepo    = "add.repository.fx"
+	ExchangeDelRepo    = "del.repository.fx"
+	ExchangeUpdateRepo = "update.repository.fx"
 )
 
 //GetConnection to the RabbitMQ Server
 func (rabbit RabbitImpl) GetConnection(uri string) *amqp.Connection {
 	conn, err := amqp.Dial(uri)
 	if err != nil {
-		//log
-		panic("Fail to connect RabbitMQ Server")
+		panic("Fail to connect RabbitMQ Server " + err.Error())
 	}
 	return conn
 }
@@ -78,23 +88,24 @@ func (rabbit RabbitImpl) GetConsumer(queue, consumer string, autoAck, exclusive,
 }
 
 //CreateQueue func
-func (rabbit RabbitImpl) CreateQueue(queueName string) error {
-	_, err := rabbit.Channel.QueueDeclare(queueName, false, true, false, false, nil)
+func (rabbit RabbitImpl) CreateQueue(queueName string, exclusive bool) error {
+	_, err := rabbit.Channel.QueueDeclare(queueName, false, false, exclusive, false, nil)
 	return err
 }
 
 //CreateFanoutExchange func
 func (rabbit RabbitImpl) CreateFanoutExchange(name string) error {
 	err := rabbit.Channel.ExchangeDeclare(
-		name, "fanout", false, false, false, false, nil,
+		name, "fanout", false, true, false, false, nil,
 	)
 	return err
 }
 
 //ConsumeRepoQueue func
 func (rabbit RabbitImpl) ConsumeRepoQueue(fn HandlerRepo, repo model.Repository) error {
-	msgs, err := rabbit.Channel.Consume(rabbit.Queues.AddRepoQueue, "", true, false, false, false, nil)
+	msgs, err := rabbit.Channel.Consume(rabbit.Queues.AddRepoQueue, "", true, true, false, false, nil)
 	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 	for msg := range msgs {
@@ -119,6 +130,32 @@ func (rabbit RabbitImpl) ConsumeInstallQueue(fn HandlerInstall, install Install)
 		} else {
 			fmt.Println("Error", err.Error())
 		}
+	}
+	return nil
+}
+
+//ConsumeDeleteRepoQueue func
+func (rabbit RabbitImpl) ConsumeDeleteRepoQueue(fn HandlerDeleteRepoQueue) error {
+	msgs, err := rabbit.Channel.Consume(rabbit.Queues.DeleteRepoQueue, "", true, true, false, false, nil)
+	if err != nil {
+		return err
+	}
+	for msg := range msgs {
+		repo := string(msg.Body)
+		fn(repo)
+	}
+	return nil
+}
+
+//ConsumeUpdateRepoQueue func
+func (rabbit RabbitImpl) ConsumeUpdateRepoQueue(fn HandlerUpdateRepoQueue) error {
+	msgs, err := rabbit.Channel.Consume(rabbit.Queues.UpdateRepoQueue, "", true, true, false, false, nil)
+	if err != nil {
+		return err
+	}
+	for msg := range msgs {
+		fmt.Println(msg.AppId)
+		fn()
 	}
 	return nil
 }

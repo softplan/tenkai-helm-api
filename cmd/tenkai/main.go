@@ -37,10 +37,10 @@ func main() {
 	defer appContext.Database.Db.Close()
 
 	queues := getQueues()
+
 	//RabbitMQ Connection
 	rabbitMQ, err := rabbitmq.InitRabbit(config.App.Rabbit.URI, queues)
 	checkFatalError(err)
-
 	appContext.RabbitMQ = rabbitMQ
 	defer rabbitMQ.Conn.Close()
 	defer rabbitMQ.Channel.Close()
@@ -76,15 +76,16 @@ func getQueues() rabbitmq.Queues {
 	queues := rabbitmq.Queues{
 		InstallQueue:       "InstallQueue",
 		ResultInstallQueue: "ResultInstallQueue",
-		DeleteRepoQueue:    "DeleteRepoQueue",
 	}
-	queues.AddRepoQueue = "RepositoriesQueue" + getRandomSufix()
+	queues.DeleteRepoQueue = "delete.repo.queue" + getRandomSufix()
+	queues.AddRepoQueue = "add.repo.queue" + getRandomSufix()
+	queues.UpdateRepoQueue = "update.repo.queue" + getRandomSufix()
 	return queues
 }
 
 func getRandomSufix() string {
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
-	sufix := r.Intn(1000)
+	sufix := r.Intn(10000)
 	return strconv.Itoa(sufix)
 }

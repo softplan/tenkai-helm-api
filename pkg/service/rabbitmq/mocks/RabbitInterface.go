@@ -30,6 +30,20 @@ func (_m *RabbitInterface) Bind(queueName string, routingKey string, exchange st
 	return r0
 }
 
+// ConsumeDeleteRepoQueue provides a mock function with given fields: fn
+func (_m *RabbitInterface) ConsumeDeleteRepoQueue(fn rabbitmq.HandlerDeleteRepoQueue) error {
+	ret := _m.Called(fn)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(rabbitmq.HandlerDeleteRepoQueue) error); ok {
+		r0 = rf(fn)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ConsumeInstallQueue provides a mock function with given fields: fn, install
 func (_m *RabbitInterface) ConsumeInstallQueue(fn rabbitmq.HandlerInstall, install rabbitmq.Install) error {
 	ret := _m.Called(fn, install)
@@ -58,6 +72,20 @@ func (_m *RabbitInterface) ConsumeRepoQueue(fn rabbitmq.HandlerRepo, repo model.
 	return r0
 }
 
+// ConsumeUpdateRepoQueue provides a mock function with given fields: fn
+func (_m *RabbitInterface) ConsumeUpdateRepoQueue(fn rabbitmq.HandlerUpdateRepoQueue) error {
+	ret := _m.Called(fn)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(rabbitmq.HandlerUpdateRepoQueue) error); ok {
+		r0 = rf(fn)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // CreateFanoutExchange provides a mock function with given fields: name
 func (_m *RabbitInterface) CreateFanoutExchange(name string) error {
 	ret := _m.Called(name)
@@ -72,13 +100,13 @@ func (_m *RabbitInterface) CreateFanoutExchange(name string) error {
 	return r0
 }
 
-// CreateQueue provides a mock function with given fields: queueName
-func (_m *RabbitInterface) CreateQueue(queueName string) error {
-	ret := _m.Called(queueName)
+// CreateQueue provides a mock function with given fields: queueName, exclusive
+func (_m *RabbitInterface) CreateQueue(queueName string, exclusive bool) error {
+	ret := _m.Called(queueName, exclusive)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(queueName)
+	if rf, ok := ret.Get(0).(func(string, bool) error); ok {
+		r0 = rf(queueName, exclusive)
 	} else {
 		r0 = ret.Error(0)
 	}

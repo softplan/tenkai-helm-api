@@ -2,21 +2,28 @@ package handlers
 
 import (
 	"encoding/hex"
-	"encoding/json"
 
 	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/softplan/tenkai-helm-api/pkg/util"
 )
 
+func logMessageReceived(function string) {
+	global.Logger.Info(
+		global.AppFields{global.Function: function},
+		"Message Received ")
+}
+
 func (appContext *AppContext) handleRepoQueue(repo model.Repository) error {
-	err := appContext.HelmServiceAPI.AddRepository(repo)
-	if err != nil {
+	logMessageReceived("handleRepoQueue")
+	if err := appContext.HelmServiceAPI.AddRepository(repo); err != nil {
 		global.Logger.Error(
 			global.AppFields{global.Function: "handleRepoQueue"},
 			"Error when try to add a new repo - "+err.Error())
+		return err
 	}
-	return err
+	appContext.addRepositoryToDB(repo)
+	return nil
 }
 
 func (appContext *AppContext) initRepos() error {
@@ -27,14 +34,14 @@ func (appContext *AppContext) initRepos() error {
 		if err != nil {
 			global.Logger.Error(
 				global.AppFields{global.Function: "initRepos"},
-				"Error when try to add a new repo - "+err.Error())
+				"Error trying to decrypt a password - "+err.Error())
 			continue
 		}
 		err = appContext.HelmServiceAPI.AddRepository(repo)
 		if err != nil {
 			global.Logger.Error(
 				global.AppFields{global.Function: "initRepos"},
-				"Error when try to add a new repo - "+err.Error())
+				"Error trying to add a new repo - "+err.Error())
 		}
 	}
 	return err
@@ -46,7 +53,8 @@ func encryptRepoPassword(password, passKey string) string {
 }
 
 func decryptRepoPassword(cryptedPassword, passKey string) (string, error) {
-	data, _ := json.Marshal(cryptedPassword)
+
+	data, _ := hex.DecodeString(cryptedPassword)
 	decryptedPassword, err := util.Decrypt(data, passKey)
 	if err != nil {
 		return "", err
@@ -66,38 +74,26 @@ func (appContext *AppContext) addRepositoryToDB(repo model.Repository) error {
 	return err
 }
 
-func consumeDeleteRepoQueue(appContext *AppContext) {
-	functionName := "consumeDeleteRepoQueue"
-	msgs, err := appContext.RabbitMQ.GetConsumer(
-		appContext.Queues.DeleteRepoQueue,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-
-	if err != nil {
+func (appContext *AppContext) handleDeleteRepoQueue(repo string) error {
+	logMessageReceived("handleDeleteRepoQueue")
+	if err := appContext.HelmServiceAPI.RemoveRepository(repo); err != nil {
 		global.Logger.Error(
-			global.AppFields{global.Function: functionName, "error": err.Error()},
-			"error when call GetCosumer")
-		panic(err)
+			global.AppFields{global.Function: "consumeDeleteRepoQueue"},
+			"Error when try to del some repo - "+err.Error())
+		return err
 	}
+	if err := appContext.Repositories.RepoDAO.Delete(repo); err != nil {
+		global.Logger.Error(
+			global.AppFields{global.Function: "consumeDeleteRepoQueue"},
+			"Error when try to del some repo of database - "+err.Error())
+		return err
+	}
+	return nil
+}
 
-	go func() {
-		for delivery := range msgs {
-			global.Logger.Info(
-				global.AppFields{global.Function: functionName},
-				global.MessageReceived)
-			var repo string
-			repo = string(delivery.Body)
-			err = appContext.HelmServiceAPI.RemoveRepository(repo)
-			if err != nil {
-				global.Logger.Error(
-					global.AppFields{global.Function: functionName},
-					"Error when try to del some repo - "+err.Error())
-			}
-		}
-	}()
+func (appContext *AppContext) handleUpdateRepoQueue() error {
+	logMessageReceived("handleUpdateRepoQueue")
+	appContext.HelmServiceAPI.RepoUpdate()
+	return nil
+
 }
