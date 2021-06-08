@@ -4,8 +4,8 @@ import (
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 )
 
-//RabbitPayloadConsumer consumer
-type RabbitPayloadConsumer struct {
+//Install consumer
+type Install struct {
 	UpgradeRequest helmapi.UpgradeRequest `json:"upgradeRequest"`
 	Name           string                 `json:"name"`
 	Token          string                 `json:"token"`
@@ -21,12 +21,4 @@ type RabbitPayloadProducer struct {
 	Success      bool   `json:"sucess"`
 	Error        string `json:"error"`
 	DeploymentID uint   `json:"deployment_id"`
-}
-
-//Repository get from quee
-type Repository struct {
-	Name     string `json:"name"`
-	URL      string `json:"url"`
-	Username string `json:"username"`
-	Password string `json:"password"`
 }
