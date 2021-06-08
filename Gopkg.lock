@@ -401,6 +401,12 @@
   version = "v0.8.1"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/prometheus/procfs"
   packages = [".","internal/fs","internal/util"]
   revision = "d3334bf511d8b1570144f488cc14d08b539df979"
@@ -476,6 +482,18 @@
   packages = ["."]
   revision = "1c71cc93ed716f9a6f4c2ae8955c25f9176d9f19"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  revision = "35313a95ee26395aa17d366c71a2ccf788fa69b6"
+  version = "v0.3.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert","mock"]
+  revision = "acba37e5db06f0093b465a7d47822bf13644b66c"
+  version = "v1.7.0"
 
 [[projects]]
   name = "go.elastic.co/apm"
@@ -566,6 +584,12 @@
   packages = ["."]
   revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
   version = "v2.2.2"
+
+[[projects]]
+  branch = "v3"
+  name = "gopkg.in/yaml.v3"
+  packages = ["."]
+  revision = "496545a6307b2a7d7a710fd516e5e16e8ab62dbc"
 
 [[projects]]
   branch = "master"
@@ -666,6 +690,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "04749b851d3df99054e670cd583ada9825482ef8ed2af3d3a85a4885ae032f60"
+  inputs-digest = "6d8f391ad567285e297190f9c90f910ee9d94122899885356ce64e5f42b8bed4"
   solver-name = "gps-cdcl"
   solver-version = 1
