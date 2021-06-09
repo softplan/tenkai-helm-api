@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 //Repository struct
 type Repository struct {
 	gorm.Model
-	Name     string `json:"name"`
+	Name     string `json:"name" gorm:"unique"`
 	URL      string `json:"url"`
 	Username string `json:"username"`
 	Password string `json:"password"`

@@ -19,8 +19,9 @@ type RepoDAOImpl struct {
 
 //CreateOrUpdate func
 func (dao RepoDAOImpl) CreateOrUpdate(repo model.Repository) error {
-	if dao.Db.Model(&repo).Where("ID = ?", repo.ID).Updates(&repo).RowsAffected == 0 {
-		return dao.Db.Create(&repo).Error
+	if dao.Db.Model(&repo).Where("name = ?", repo.Name).Updates(&repo).RowsAffected == 0 {
+		err :=  dao.Db.Create(&repo).Error
+		return err
 	}
 	return nil
 }
