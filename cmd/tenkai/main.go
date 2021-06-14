@@ -49,7 +49,7 @@ func main() {
 	appContext.HelmServiceAPI = helmapi.HelmServiceBuilder()
 	initializeHelm(appContext)
 
-	handlers.StartConsumer(appContext)
+	go handlers.StartConsumer(appContext)
 	handlers.StartHTTPServer(appContext)
 }
 

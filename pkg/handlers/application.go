@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"sync"
 
 	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
@@ -64,9 +63,6 @@ func StartHTTPServer(appContext *AppContext) {
 	r := mux.NewRouter()
 
 	defineRotes(r, appContext)
-
-	portInt, _ := strconv.Atoi(port)
-	port = strconv.Itoa(portInt + 1)
 	log.Fatal(http.ListenAndServe(":"+port, commonHandler(r)))
 }
 
