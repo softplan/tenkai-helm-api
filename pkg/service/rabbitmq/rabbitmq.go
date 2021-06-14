@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"github.com/streadway/amqp"
@@ -142,6 +143,7 @@ func (rabbit RabbitImpl) ConsumeDeleteRepoQueue(fn HandlerDeleteRepoQueue) error
 	}
 	for msg := range msgs {
 		repo := string(msg.Body)
+		repo = strings.Replace(repo, "\"", "", -1)
 		fn(repo)
 	}
 	return nil

@@ -42,6 +42,7 @@ func main() {
 	rabbitMQ, err := rabbitmq.InitRabbit(config.App.Rabbit.URI, queues)
 	checkFatalError(err)
 	appContext.RabbitMQ = rabbitMQ
+	appContext.Queues = queues
 	defer rabbitMQ.Conn.Close()
 	defer rabbitMQ.Channel.Close()
 
