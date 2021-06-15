@@ -42,6 +42,7 @@ func main() {
 	rabbitMQ, err := rabbitmq.InitRabbit(config.App.Rabbit.URI, queues)
 	checkFatalError(err)
 	appContext.RabbitMQ = rabbitMQ
+	appContext.Queues = queues
 	defer rabbitMQ.Conn.Close()
 	defer rabbitMQ.Channel.Close()
 
@@ -49,7 +50,7 @@ func main() {
 	appContext.HelmServiceAPI = helmapi.HelmServiceBuilder()
 	initializeHelm(appContext)
 
-	handlers.StartConsumer(appContext)
+	go handlers.StartConsumer(appContext)
 	handlers.StartHTTPServer(appContext)
 }
 

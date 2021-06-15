@@ -43,6 +43,7 @@ func (appContext *AppContext) initRepos() error {
 				global.AppFields{global.Function: "initRepos"},
 				"Error trying to add a new repo - "+err.Error())
 		}
+		appContext.HelmServiceAPI.RepoUpdate()
 	}
 	return err
 }

@@ -3,8 +3,10 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
+	"github.com/softplan/tenkai-helm-api/pkg/global"
 	"github.com/streadway/amqp"
 )
 
@@ -120,7 +122,13 @@ func (rabbit RabbitImpl) ConsumeRepoQueue(fn HandlerRepo, repo model.Repository)
 
 //ConsumeInstallQueue func
 func (rabbit RabbitImpl) ConsumeInstallQueue(fn HandlerInstall, install Install) error {
-	msgs, err := rabbit.Channel.Consume(rabbit.Queues.InstallQueue, "", true, false, false, false, nil)
+	ch := rabbit.Channel
+	err := ch.Qos(1, 0, false)
+	if err != nil {
+		return err
+	}
+
+	msgs, err := ch.Consume(rabbit.Queues.InstallQueue, "", false, false, false, false, nil)
 	if err != nil {
 		return err
 	}
@@ -128,8 +136,10 @@ func (rabbit RabbitImpl) ConsumeInstallQueue(fn HandlerInstall, install Install)
 		if err := json.Unmarshal(msg.Body, &install); err == nil {
 			fn(install)
 		} else {
-			fmt.Println("Error", err.Error())
+			global.Logger.Error(global.AppFields{global.Function: "ConsumeInstallQueue"}, err.Error())
 		}
+		global.Logger.Info(global.AppFields{global.Function: "ConsumeInstallQueue"}, "Handled one message")
+		msg.Ack(true)
 	}
 	return nil
 }
@@ -142,6 +152,7 @@ func (rabbit RabbitImpl) ConsumeDeleteRepoQueue(fn HandlerDeleteRepoQueue) error
 	}
 	for msg := range msgs {
 		repo := string(msg.Body)
+		repo = strings.Replace(repo, "\"", "", -1)
 		fn(repo)
 	}
 	return nil
