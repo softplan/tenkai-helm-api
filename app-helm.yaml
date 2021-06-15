@@ -3,6 +3,8 @@ server:
 app:
   rabbit:
     uri: ""
+  dbms: 
+    uri: ""
 elastic:
   apm:
     server:

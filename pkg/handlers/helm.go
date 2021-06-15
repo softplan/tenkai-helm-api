@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/softplan/tenkai-helm-api/pkg/dbms/model"
 	"github.com/softplan/tenkai-helm-api/pkg/global"
-	"github.com/softplan/tenkai-helm-api/pkg/model"
 	helmapi "github.com/softplan/tenkai-helm-api/pkg/service/_helm"
 )
 
@@ -59,9 +59,4 @@ func (appContext *AppContext) listCharts(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 
-}
-
-func (appContext *AppContext) repoUpdate(w http.ResponseWriter, r *http.Request) {
-	global.Logger.Info(global.AppFields{global.Function: "repoUpdate"}, "Received repoUpdate request")
-	appContext.HelmServiceAPI.RepoUpdate()
 }

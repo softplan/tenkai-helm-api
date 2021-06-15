@@ -540,6 +540,10 @@ func (d *deleteFailingKubeClient) Delete(ns string, r io.Reader) error {
 	return kube.ErrNoObjectsVisited
 }
 
+func (d *deleteFailingKubeClient) DeleteWithTimeout(ns string, r io.Reader, timeout int64, shouldWait bool) error {
+	return kube.ErrNoObjectsVisited
+}
+
 type mockListServer struct {
 	val *services.ListReleasesResponse
 }
@@ -612,6 +616,9 @@ func (kc *mockHooksKubeClient) Get(ns string, r io.Reader) (string, error) {
 	return "", nil
 }
 func (kc *mockHooksKubeClient) Delete(ns string, r io.Reader) error {
+	return kc.DeleteWithTimeout(ns, r, 0, false)
+}
+func (kc *mockHooksKubeClient) DeleteWithTimeout(ns string, r io.Reader, timeout int64, shouldWait bool) error {
 	manifest, err := kc.makeManifest(r)
 	if err != nil {
 		return err
@@ -649,6 +656,9 @@ func (kc *mockHooksKubeClient) Build(ns string, reader io.Reader) (kube.Result, 
 }
 func (kc *mockHooksKubeClient) BuildUnstructured(ns string, reader io.Reader) (kube.Result, error) {
 	return []*resource.Info{}, nil
+}
+func (kc *mockHooksKubeClient) Validate(ns string, reader io.Reader) error {
+	return nil
 }
 func (kc *mockHooksKubeClient) WaitAndGetCompletedPodPhase(namespace string, reader io.Reader, timeout time.Duration) (v1.PodPhase, error) {
 	return v1.PodUnknown, nil

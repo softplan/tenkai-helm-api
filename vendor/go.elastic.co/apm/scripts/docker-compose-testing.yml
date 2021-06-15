@@ -1,0 +1,146 @@
+# Use scripts/docker-compose-testing, which will set the project name
+# and docker-compose file path (i.e. path to this file).
+#
+# After "docker-compose-testing up", tests can be run like this:
+#     scripts/docker-compose-testing run --rm go-agent-tests make test
+
+version: '3'
+services:
+  go-agent-tests:
+    build:
+      context: ..
+      dockerfile: scripts/Dockerfile-testing
+    environment:
+      CASSANDRA_HOST: cassandra
+      MYSQL_HOST: mysql
+      PGHOST: postgres
+      REDIS_URL: redis://redis
+      REDIS_CLUSTER_URLS: redis://redis-node-1:6380 redis://redis-node-2:6381 redis://redis-node-3:6382
+      REDIS_RING_URLS: redis://redis redis://redis-2:6383
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    depends_on:
+      - cassandra
+      - mysql
+      - postgres
+      - redis
+      - redis-2
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-cluster
+      - elasticsearch
+
+  trace-context-service:
+    build:
+      context: ..
+      dockerfile: internal/tracecontexttest/Dockerfile
+
+  trace-context-harness:
+    build:
+      context: ../internal/tracecontexttest
+      dockerfile: Dockerfile-harness
+    command: /bin/bash -c 'HARNESS_HOST=$$HOSTNAME python test/test.py http://trace-context-service:5000/'
+    depends_on:
+      - trace-context-service
+
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=hunter2
+      - MYSQL_DATABASE=test_db
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=hunter2
+      - POSTGRES_DB=test_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:latest
+    volumes:
+      - cassandradata:/var/lib/cassandra
+    environment:
+      MAX_HEAP_SIZE: "1G"
+      HEAP_NEWSIZE: 400m
+
+  redis:
+    image: redis:5
+
+  redis-2:
+    image: redis:5
+    entrypoint:
+      - sh
+      - -c
+      - "redis-server --bind 0.0.0.0 --port 6383 --appendonly yes"
+
+  redis-node-1:
+    image: redis:5
+    entrypoint:
+      - sh
+      - -c
+      - "redis-server --bind 0.0.0.0 --port 6380 --protected-mode no --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 1500 --appendonly yes"
+
+  redis-node-2:
+    image: redis:5
+    entrypoint:
+      - sh
+      - -c
+      - "redis-server --bind 0.0.0.0 --port 6381 --protected-mode no --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 1500 --appendonly yes"
+
+  redis-node-3:
+    image: redis:5
+    entrypoint:
+      - sh
+      - -c
+      - "redis-server --bind 0.0.0.0 --port 6382 --protected-mode no --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 1500 --appendonly yes"
+
+  redis-cluster:
+    image: redis:5
+    depends_on:
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+    entrypoint:
+      - sh
+      - -c
+      - "echo \"yes\" | redis-cli --cluster create $$(getent hosts redis-node-1 | awk '{ print $$1 }'):6380 $$(getent hosts redis-node-2 | awk '{ print $$1 }'):6381 $$(getent hosts redis-node-3 | awk '{ print $$1 }'):6382 --cluster-replicas 0"
+    restart: on-failure
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.6.0
+    volumes:
+      - esdata:/var/lib/elasticsearch/data
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      bootstrap.memory_lock: "true"
+      discovery.type: "single-node"
+      path.data: "path.data=/var/lib/elasticsearch/data"
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongodata:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=test_db
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=hunter2
+
+volumes:
+  mysqldata:
+    driver: local
+  pgdata:
+    driver: local
+  cassandradata:
+    driver: local
+  esdata:
+    driver: local
+  mongodata:
+    driver: local
